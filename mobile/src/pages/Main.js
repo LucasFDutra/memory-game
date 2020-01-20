@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
-  StyleSheet, View, Image, TouchableOpacity,
+  StyleSheet, View, Image, TouchableOpacity, Text,
 } from 'react-native';
 
 import Angle from '../assets/angle.png';
@@ -14,16 +14,24 @@ import Ui from '../assets/ui.png';
 
 const Main = () => {
   const [figures, setFigures] = useState(null);
+  const [figuresCorrect, setFiguresCorrect] = useState(null);
   const [clicked, setClicked] = useState(null);
+  const [finish, setFinish] = useState(true);
 
   useEffect(() => {
+    restart();
+  }, []);
+
+  const restart = () => {
     const arrayFigures = [Angle, Cross, Hyperbole, InfinitySimble, Pi, Plus, Sigma, Ui];
     let arrayFiguresZeros = [];
-    let arrayFiguresCliked = [];
+    let arrayClicked = [];
+    let arrayFiguresCorrect = [];
 
     for (let i = 0; i < 2 * arrayFigures.length; i++) {
       arrayFiguresZeros = [...arrayFiguresZeros, 0];
-      arrayFiguresCliked = [...arrayFiguresCliked, false];
+      arrayClicked = [...arrayClicked, false];
+      arrayFiguresCorrect = [...arrayFiguresCorrect, false];
     }
 
     let position1 = 0;
@@ -50,14 +58,53 @@ const Main = () => {
     }
 
     setFigures(arrayFiguresZeros);
-    setClicked(arrayFiguresCliked);
-  }, []);
+    setClicked(arrayClicked);
+    setFiguresCorrect(arrayFiguresCorrect);
+  };
+
+  useEffect(() => {
+    if (figuresCorrect) {
+      let complet = true;
+      for (let i = 0; i < figuresCorrect.length; i++) {
+        if (!figuresCorrect[i]) {
+          complet = false;
+        }
+      }
+      if (complet) {
+        setFinish(true);
+      }
+    }
+  }, [figuresCorrect]);
+
 
   const pressCard = (index) => {
-    const arrayFiguresCliked = [...clicked];
-    console.log(arrayFiguresCliked);
-    arrayFiguresCliked[index] = !arrayFiguresCliked[index];
-    setClicked(arrayFiguresCliked);
+    const arrayClicked = [...clicked];
+    arrayClicked[index] = true;
+
+    let count = 0;
+    for (let i = 0; i < arrayClicked.length; i++) {
+      if (arrayClicked[i]) {
+        count++;
+      }
+    }
+
+    if (count === 2) {
+      let positions = [];
+      for (let i = 0; i < arrayClicked.length; i++) {
+        if (arrayClicked[i]) {
+          positions = [...positions, i];
+        }
+      }
+      if (figures[positions[0]] === figures[positions[1]]) {
+        const arrayFiguresCorrect = [...figuresCorrect];
+        arrayFiguresCorrect[positions[0]] = true;
+        arrayFiguresCorrect[positions[1]] = true;
+        setFiguresCorrect(arrayFiguresCorrect);
+      }
+      arrayClicked[positions[0]] = false;
+      arrayClicked[positions[1]] = false;
+    }
+    setClicked(arrayClicked);
   };
 
   if (!figures) {
@@ -70,13 +117,18 @@ const Main = () => {
         figures.map((figure, index) => (
           <TouchableOpacity key={index} style={styles.card} onPress={() => pressCard(index)}>
             {
-              clicked[index] && (
+              (clicked[index] || figuresCorrect[index]) && (
                 <Image style={styles.cardImage} source={figure} />
               )
             }
           </TouchableOpacity>
         ))
       }
+      <View>
+        <TouchableOpacity onPress={() => restart()} style={styles.restartButton}>
+          <Text style={styles.restartButtonText}>Restart</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -105,6 +157,21 @@ const styles = StyleSheet.create({
     margin: 0,
     width: 38,
     height: 38,
+  },
+  restartButton: {
+    margin: 10,
+    marginTop: 40,
+    backgroundColor: '#008ABC',
+    width: 340,
+    height: 80,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  restartButtonText: {
+    color: '#f5f5f5',
+    fontSize: 20,
+    fontWeight: 'bold',
   },
 });
 
